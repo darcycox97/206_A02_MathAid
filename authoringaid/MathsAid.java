@@ -130,7 +130,7 @@ public class MathsAid extends JFrame {
 				Creation toPlay = _listCrtns.getSelectedValue();
 				if (toPlay != null) {
 					_player.mute(false);
-					_player.playMedia(toPlay.getFileName(Creation.COMBINED).getPath(),"");
+					_player.playMedia(toPlay.getFileName(Creation.Components.COMBINED).getPath(),"");
 				}
 			}
 		});
@@ -165,12 +165,12 @@ public class MathsAid extends JFrame {
 				}
 
 				if (overwrite) {
-					c.getFileName(Creation.ROOT).mkdirs(); // set up root directory
+					c.getFileName(Creation.Components.ROOT).mkdirs(); // set up root directory
 					
 					// get paths to each component of the creation
-					File pathToVideo = c.getFileName(Creation.VIDEO);
-					File pathToAudio = c.getFileName(Creation.AUDIO);
-					File pathToCombined = c.getFileName(Creation.COMBINED);
+					File pathToVideo = c.getFileName(Creation.Components.VIDEO);
+					File pathToAudio = c.getFileName(Creation.Components.AUDIO);
+					File pathToCombined = c.getFileName(Creation.Components.COMBINED);
 					
 					try {
 						// bash command for creating the video
@@ -246,6 +246,8 @@ public class MathsAid extends JFrame {
 
 		NativeDiscovery nd = new NativeDiscovery();
 		nd.discover();
+		
+		System.out.println("New Version!");
 
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override
@@ -280,10 +282,10 @@ public class MathsAid extends JFrame {
 	 * @param toDelete The creation to be deleted
 	 */
 	public void removeCreation(Creation toDelete) {
-		toDelete.getFileName(Creation.AUDIO).delete();
-		toDelete.getFileName(Creation.VIDEO).delete();
-		toDelete.getFileName(Creation.COMBINED).delete();
-		toDelete.getFileName(Creation.ROOT).delete();
+		toDelete.getFileName(Creation.Components.AUDIO).delete();
+		toDelete.getFileName(Creation.Components.VIDEO).delete();
+		toDelete.getFileName(Creation.Components.COMBINED).delete();
+		toDelete.getFileName(Creation.Components.ROOT).delete();
 
 		_existingCrtns.removeElement(toDelete);
 	}

@@ -14,13 +14,12 @@ import javax.swing.SwingWorker;
  * @author Darcy Cox
  *
  */
-public class CreationManager extends SwingWorker<Integer, Integer> {
-	// integer codes for sp
-	public static int VIDEO = 5;
-	public static int AUDIO = 7;
-	public static int COMBINED = 9;
+public class CreationWorker extends SwingWorker<Integer, Integer> {
+	public enum CreationPart {
+		VIDEO, AUDIO, COMBINED
+	}
 
-	private int _compToCreate;
+	private CreationPart _compToCreate;
 	private Creation _creation;
 	private JComponent _dialogParent;
 	private DefaultListModel<String> _creationsList;
@@ -32,12 +31,7 @@ public class CreationManager extends SwingWorker<Integer, Integer> {
 	 * @param process The component this instance is to create (VIDEO, AUDIO, or COMBINED)
 	 * @param c The creation to create the component for
 	 */
-	public CreationManager(int compToCreate, Creation c, JComponent dialogParent) {
-		if (compToCreate != VIDEO || compToCreate != AUDIO || compToCreate != COMBINED) {
-			throw new RuntimeException("first argument must be either VIDEO, AUDIO, or COMBINED");
-		} else if (c == null) {
-			throw new RuntimeException("second argument cannot be null");
-		}
+	public CreationWorker(CreationPart compToCreate, Creation c, JComponent dialogParent) {
 		_compToCreate = compToCreate;
 		_creation = c;
 		_dialogParent = dialogParent;
@@ -45,10 +39,10 @@ public class CreationManager extends SwingWorker<Integer, Integer> {
 
 	protected Integer doInBackground() {
 		File path;
-		if (_compToCreate == VIDEO) {
+		if (_compToCreate == CreationPart.VIDEO) {
 
 			try {
-				path = _creation.getFileName(Creation.VIDEO);
+				path = _creation.getFileName(Creation.Components.VIDEO);
 
 				ProcessBuilder vid = new ProcessBuilder("bash","-c",
 						"ffmpeg -y -f lavfi -i color=c=blue -vf \"drawtext=fontfile=:fontsize=30:fontcolor=white:" +
@@ -64,7 +58,7 @@ public class CreationManager extends SwingWorker<Integer, Integer> {
 
 
 
-		} else if (_compToCreate == AUDIO) {
+		} else if (_compToCreate == CreationPart.AUDIO) {
 
 		} else {
 			// default to COMBINED

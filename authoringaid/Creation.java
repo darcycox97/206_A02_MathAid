@@ -9,15 +9,10 @@ public class Creation {
 	private File _audio;
 	private File _combined;
 
-	public static final int ROOT = 0;
-	public static final int VIDEO = 1;
-	public static final int AUDIO = 2;
-	public static final int COMBINED = 3;
-	
-	public enum PathComponent {
+	public enum Components {
 		ROOT, VIDEO, AUDIO, COMBINED
 	}
-	
+
 
 	public Creation(String name) {
 		_name = name;
@@ -32,20 +27,21 @@ public class Creation {
 	 * @param pathId the File object to be returned
 	 * @return The specified File object
 	 */
-	public File getFileName(int pathId) {
+	public File getFileName(Components comp) {
 
-		if (pathId == VIDEO) {
-			return _video;
-		} else if (pathId == AUDIO) {
-			return _audio;
-		} else if (pathId == COMBINED) {
-			return _combined;
-		} else if (pathId == ROOT){
+		switch (comp) {
+		case ROOT: 
 			return _path;
-		} else {
-			throw new RuntimeException("Argument must be a valid integer code");
+		case VIDEO:
+			return _video;
+		case AUDIO:
+			return _audio;
+		case COMBINED:
+			return _combined;
+		default:
+			// this will never be reached
+			throw new RuntimeException("Not a valid enum value");
 		}
-
 	}
 
 	public void make() {
