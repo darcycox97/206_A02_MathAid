@@ -141,7 +141,7 @@ public class MathsAid extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 
 				String name = _txtCrtnName.getText();
-				boolean validName = validCrtnName(name);
+				boolean validName = CreationManager.validName(name);
 				if (!validName) {
 					// let user know the creation name is not valid
 					JOptionPane.showMessageDialog(_panelCreate, "The name you entered is not valid.\n" +
@@ -157,11 +157,11 @@ public class MathsAid extends JFrame {
 					int overWriteSel = JOptionPane.showConfirmDialog(_panelCreate, "The creation \"" + name + "\" already exists.\n"
 							+ "Do you wish to overwrite it?","Please select an option", JOptionPane.YES_NO_OPTION);
 					if (overWriteSel != JOptionPane.YES_OPTION) {
-						overwrite = false;
 						return;
 					}
 					// user has chosen to overwrite
 					CreationManager.deleteCreation(c);
+					_existingCrtns.removeElement(c);
 				}
 
 				if (overwrite) {
@@ -274,17 +274,6 @@ public class MathsAid extends JFrame {
 				}
 			}
 		}
-	}
-
-	
-	/**
-	 * Runs a reg-ex pattern on the given name to determine if it is
-	 * valid (consists only of alphanumeric characters,"-",or "_").
-	 * @param name The user input to validate
-	 * @return
-	 */
-	private boolean validCrtnName(String name) {
-		return Pattern.matches("[\\w\\-]+", name);
 	}
 
 
