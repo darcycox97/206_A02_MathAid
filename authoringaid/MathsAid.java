@@ -117,7 +117,7 @@ public class MathsAid extends JFrame {
 							"Select an option",JOptionPane.YES_NO_OPTION);
 
 					if (selection == JOptionPane.YES_OPTION) {
-						removeCreation(toDelete);
+						CreationManager.deleteCreation(toDelete);
 					}
 				}
 			}
@@ -161,11 +161,11 @@ public class MathsAid extends JFrame {
 						return;
 					}
 					// user has chosen to overwrite
-					removeCreation(c);
+					CreationManager.deleteCreation(c);
 				}
 
 				if (overwrite) {
-					c.getFileName(Creation.Components.ROOT).mkdirs(); // set up root directory
+					CreationManager.setUpCreation(c); // set up root directory
 					
 					// get paths to each component of the creation
 					File pathToVideo = c.getFileName(Creation.Components.VIDEO);
@@ -179,7 +179,7 @@ public class MathsAid extends JFrame {
 										"x=(w-text_w)/2:y=(h-text_h)/2:text='" + c + "'\" -t 3 " + pathToVideo.getPath());
 						Process vidP = vid.start();
 						if (vidP.waitFor() == 1){
-							removeCreation(c); // remove partially finished creation
+							CreationManager.deleteCreation(c); // remove partially finished creation
 							return; 
 						}
 
@@ -192,7 +192,7 @@ public class MathsAid extends JFrame {
 									"ffmpeg -f alsa -ac 2 -i default -t 3 " + pathToAudio.getPath());
 							Process rec = audio.start();
 							if (rec.waitFor() == 1) {
-								removeCreation(c); // remove partially finished creation
+								CreationManager.deleteCreation(c); // remove partially finished creation
 								return; // do not proceed if something went wrong
 							}
 
@@ -228,12 +228,12 @@ public class MathsAid extends JFrame {
 						if (p.waitFor() == 0) {
 							_existingCrtns.addElement(c); // add creation to gui if merge was successful
 						} else {
-							removeCreation(c); // delete all files if an error occurred
+							CreationManager.deleteCreation(c); // delete all files if an error occurred
 						}
 
 					} catch (IOException | InterruptedException e1) {
 						// clean up by deleting all files if an exception was thrown
-						removeCreation(c);
+						CreationManager.deleteCreation(c);
 					}
 				}
 			}
@@ -247,7 +247,7 @@ public class MathsAid extends JFrame {
 		NativeDiscovery nd = new NativeDiscovery();
 		nd.discover();
 		
-		System.out.println("New Version!");
+		System.out.println("New Version! 2.0");
 
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override
@@ -276,22 +276,9 @@ public class MathsAid extends JFrame {
 		}
 	}
 
+	
 	/**
-	 * Deletes all files related to a specified creation
-	 * and removes from the list.
-	 * @param toDelete The creation to be deleted
-	 */
-	public void removeCreation(Creation toDelete) {
-		toDelete.getFileName(Creation.Components.AUDIO).delete();
-		toDelete.getFileName(Creation.Components.VIDEO).delete();
-		toDelete.getFileName(Creation.Components.COMBINED).delete();
-		toDelete.getFileName(Creation.Components.ROOT).delete();
-
-		_existingCrtns.removeElement(toDelete);
-	}
-
-	/**
-	 * Runs a regex pattern on the given name to determine if it is
+	 * Runs a reg-ex pattern on the given name to determine if it is
 	 * valid (consists only of alphanumeric characters,"-",or "_").
 	 * @param name The user input to validate
 	 * @return

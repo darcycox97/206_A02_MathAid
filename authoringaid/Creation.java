@@ -24,7 +24,7 @@ public class Creation {
 
 	/**
 	 * Queries the creation for the specified path.
-	 * @param pathId the File object to be returned
+	 * @param comp the component of the creation we want the path for
 	 * @return The specified File object
 	 */
 	public File getFileName(Components comp) {
@@ -44,20 +44,8 @@ public class Creation {
 		}
 	}
 
-	public void make() {
-		_path.mkdirs();
-	}
-
-
-	// public void delete() {
-	//	  _video.delete();
-	//	  _audio.delete();
-	//	  _combined.delete();
-	//	  _path.delete();
-	// }
-
 	public boolean equals(Object obj) {
-		if (obj instanceof Creation) {
+		if (obj instanceof Creation && obj != null) {
 			return _name.equals(((Creation)obj)._name);
 		} else {
 			return false;
