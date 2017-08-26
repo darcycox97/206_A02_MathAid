@@ -247,7 +247,7 @@ public class MathsAid extends JFrame {
 		NativeDiscovery nd = new NativeDiscovery();
 		nd.discover();
 		
-		System.out.println("New Version! 2.0");
+		System.out.println("Master Branch");
 
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override
