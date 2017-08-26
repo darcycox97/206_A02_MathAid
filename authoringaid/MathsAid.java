@@ -118,6 +118,7 @@ public class MathsAid extends JFrame {
 
 					if (selection == JOptionPane.YES_OPTION) {
 						CreationManager.deleteCreation(toDelete);
+						_existingCrtns.removeElement(toDelete);
 					}
 				}
 			}
@@ -162,6 +163,7 @@ public class MathsAid extends JFrame {
 					}
 					// user has chosen to overwrite
 					CreationManager.deleteCreation(c);
+					_existingCrtns.removeElement(c);
 				}
 
 				if (overwrite) {
@@ -192,7 +194,7 @@ public class MathsAid extends JFrame {
 									"ffmpeg -f alsa -ac 2 -i default -t 3 " + pathToAudio.getPath());
 							Process rec = audio.start();
 							if (rec.waitFor() == 1) {
-								CreationManager.deleteCreation(c); // remove partially finished creation
+								CreationManager.deleteCreation(c);  // remove partially finished creation
 								return; // do not proceed if something went wrong
 							}
 
