@@ -68,6 +68,11 @@ public class CreationWorker extends SwingWorker<Integer, Void> {
 			ProcessBuilder combine = new ProcessBuilder("bash","-c",
 					"ffmpeg -i " + audioPath.getPath() + " -i " + vidPath.getPath() + 
 					" -codec copy " + combinedPath.getPath());
+			Process combineP = combine.start();
+			exitVal = combineP.waitFor();
+			if (exitVal != 0) {
+				return exitVal; // exit if error occurred
+			}
 			
 			// Tell user creation has been successfully generated
 			JOptionPane.showMessageDialog(_gui, "Creation \"" + _creation + "\" successfully created");
@@ -77,9 +82,9 @@ public class CreationWorker extends SwingWorker<Integer, Void> {
 
 		} catch (IOException | InterruptedException e) {
 				CreationManager.deleteCreation(_creation); // delete all component files if something went wrong
+				return 1;
 		}
 		
-		return null;
 	}
 
 	protected void done() {

@@ -145,9 +145,8 @@ public class MathsAid extends JFrame {
 				boolean validName = validCrtnName(name);
 				if (!validName) {
 					// let user know the creation name is not valid
-					JOptionPane.showMessageDialog(_panelCreate, "The name you entered is not valid.\n" +
-							"Names may only include alphanumeric character, hyphens, or underscores.", "Invalid Name",
-							JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(_panelCreate,"Names may only include alphanumeric character, hyphens, or underscores.",
+							"Invalid Name",	JOptionPane.ERROR_MESSAGE);
 					return;
 				}
 
@@ -168,76 +167,79 @@ public class MathsAid extends JFrame {
 
 				if (overwrite) {
 					CreationManager.setUpCreation(c); // set up root directory
-					
-					// get paths to each component of the creation
-					File pathToVideo = c.getFileName(Creation.Components.VIDEO);
-					File pathToAudio = c.getFileName(Creation.Components.AUDIO);
-					File pathToCombined = c.getFileName(Creation.Components.COMBINED);
-					
-					try {
-						// bash command for creating the video
-						ProcessBuilder vid = new ProcessBuilder("bash","-c",
-								"ffmpeg -y -f lavfi -i color=c=blue -vf \"drawtext=fontfile=:fontsize=30:fontcolor=white:" +
-										"x=(w-text_w)/2:y=(h-text_h)/2:text='" + c + "'\" -t 3 " + pathToVideo.getPath());
-						Process vidP = vid.start();
-						if (vidP.waitFor() == 1){
-							CreationManager.deleteCreation(c); // remove partially finished creation
-							return; 
-						}
-
-						JOptionPane.showMessageDialog(_panelCreate, "Video component created!\n"
-								+ "Press OK to record the audio for this creation");
-
-						while (true) {
-							// bash command for recording audio component
-							ProcessBuilder audio = new ProcessBuilder("bash","-c",
-									"ffmpeg -f alsa -ac 2 -i default -t 3 " + pathToAudio.getPath());
-							Process rec = audio.start();
-							if (rec.waitFor() == 1) {
-								CreationManager.deleteCreation(c);  // remove partially finished creation
-								return; // do not proceed if something went wrong
-							}
-
-							int playBackSel = JOptionPane.showConfirmDialog(_panelCreate, "Would you like to listen to the recording?",
-									"Please select an option", JOptionPane.YES_NO_OPTION);
-							
-							if (playBackSel == JOptionPane.YES_OPTION) {
-								_player.mute(false);
-								_player.playMedia(pathToAudio.getPath(), "");
-							} else {
-								break;
-							}
-
-							// show dialog asking user to keep or redo recording
-							Object[] options = {"Keep","Redo"};
-							int selection = JOptionPane.showOptionDialog(_panelCreate, "Do you want to keep or redo this recording?",
-									"Please choose an action to take", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE,
-									null, options, null);
-
-							if (selection != 1) {
-								break;
-							} else {
-								pathToAudio.delete();
-								JOptionPane.showMessageDialog(_panelCreate, "Press OK to record");
-							}
-						}
-
-						// bash command to combine audio and video components
-						ProcessBuilder combine = new ProcessBuilder("bash","-c",
-								"ffmpeg -i " + pathToAudio.getPath() + " -i " + pathToVideo.getPath() + 
-								" -codec copy " + pathToCombined.getPath());
-						Process p = combine.start();
-						if (p.waitFor() == 0) {
-							_existingCrtns.addElement(c); // add creation to gui if merge was successful
-						} else {
-							CreationManager.deleteCreation(c); // delete all files if an error occurred
-						}
-
-					} catch (IOException | InterruptedException e1) {
-						// clean up by deleting all files if an exception was thrown
-						CreationManager.deleteCreation(c);
-					}
+					CreationWorker worker = new CreationWorker(c, _panelOptions, _existingCrtns);
+					worker.execute();
 				}
+					
+	//				// get paths to each component of the creation
+	//				File pathToVideo = c.getFileName(Creation.Components.VIDEO);
+	//				File pathToAudio = c.getFileName(Creation.Components.AUDIO);
+	//				File pathToCombined = c.getFileName(Creation.Components.COMBINED);
+	//				
+	//				try {
+	//					// bash command for creating the video
+	//					ProcessBuilder vid = new ProcessBuilder("bash","-c",
+	//							"ffmpeg -y -f lavfi -i color=c=blue -vf \"drawtext=fontfile=:fontsize=30:fontcolor=white:" +
+	//									"x=(w-text_w)/2:y=(h-text_h)/2:text='" + c + "'\" -t 3 " + pathToVideo.getPath());
+	//					Process vidP = vid.start();
+	//					if (vidP.waitFor() == 1){
+	//						CreationManager.deleteCreation(c); // remove partially finished creation
+	//						return; 
+	//					}
+    //
+	//					JOptionPane.showMessageDialog(_panelCreate, "Video component created!\n"
+	//							+ "Press OK to record the audio for this creation");
+    //
+	//					while (true) {
+	//						// bash command for recording audio component
+	//						ProcessBuilder audio = new ProcessBuilder("bash","-c",
+	//								"ffmpeg -f alsa -ac 2 -i default -t 3 " + pathToAudio.getPath());
+	//						Process rec = audio.start();
+	//						if (rec.waitFor() == 1) {
+	//							CreationManager.deleteCreation(c);  // remove partially finished creation
+	//							return; // do not proceed if something went wrong
+	//						}
+    //
+	//						int playBackSel = JOptionPane.showConfirmDialog(_panelCreate, "Would you like to listen to the recording?",
+	//								"Please select an option", JOptionPane.YES_NO_OPTION);
+	//						
+	//						if (playBackSel == JOptionPane.YES_OPTION) {
+	//							_player.mute(false);
+	//							_player.playMedia(pathToAudio.getPath(), "");
+	//						} else {
+	//							break;
+	//						}
+    //
+	//						// show dialog asking user to keep or redo recording
+	//						Object[] options = {"Keep","Redo"};
+	//						int selection = JOptionPane.showOptionDialog(_panelCreate, "Do you want to keep or redo this recording?",
+	//								"Please choose an action to take", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE,
+	//								null, options, null);
+    //
+	//						if (selection != 1) {
+	//							break;
+	//						} else {
+	//							pathToAudio.delete();
+	//							JOptionPane.showMessageDialog(_panelCreate, "Press OK to record");
+	//						}
+	//					}
+    //
+	//					// bash command to combine audio and video components
+	//					ProcessBuilder combine = new ProcessBuilder("bash","-c",
+	//							"ffmpeg -i " + pathToAudio.getPath() + " -i " + pathToVideo.getPath() + 
+	//							" -codec copy " + pathToCombined.getPath());
+	//					Process p = combine.start();
+	//					if (p.waitFor() == 0) {
+	//						_existingCrtns.addElement(c); // add creation to gui if merge was successful
+	//					} else {
+	//						CreationManager.deleteCreation(c); // delete all files if an error occurred
+	//					}
+    //
+	//				} catch (IOException | InterruptedException e1) {
+	//					// clean up by deleting all files if an exception was thrown
+	//					CreationManager.deleteCreation(c);
+	//				}
+	//			}
 			}
 		});
 
