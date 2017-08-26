@@ -134,6 +134,28 @@ public class MathsAid extends JFrame {
 		
 
 		/***************** Event Handlers ******************/
+		
+		// functionality for create mode button, should toggle main panel to display create mode
+		_btnCreateMode.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				((CardLayout)_pnlMain.getLayout()).show(_pnlMain, CREATE_MODE_ID);
+				// play/delete buttons should not be usable in this mode
+				_btnPlay.setEnabled(false);
+				_btnDelete.setEnabled(false);
+				_btnCreateMode.setEnabled(false);
+			}
+		});
+		
+		// functionality for quit button, should toggle main panel to display video view
+		_btnQuit.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				((CardLayout)_pnlMain.getLayout()).show(_pnlMain, VIDEO_VIEW_ID);
+				// play/delete functionality is allowed again, reenable buttons
+				_btnPlay.setEnabled(true);
+				_btnDelete.setEnabled(true);
+				_btnCreateMode.setEnabled(true);
+			}
+		});
 
 //		// functionality for delete button
 //		_btnDelete.addActionListener(new ActionListener (){
