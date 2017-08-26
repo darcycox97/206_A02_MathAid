@@ -1,6 +1,7 @@
 package authoringaid;
 
 import javax.swing.SwingUtilities;
+import javax.swing.border.BevelBorder;
 
 import uk.co.caprica.vlcj.component.EmbeddedMediaPlayerComponent;
 import uk.co.caprica.vlcj.discovery.NativeDiscovery;
@@ -12,15 +13,19 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingConstants;
 import javax.swing.JScrollPane;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
+import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
+import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
@@ -31,42 +36,46 @@ import java.io.IOException;
 public class MathsAid extends JFrame {
 	//TODO: Create constants to refer to component sizes/display text
 	//TODO: display initial creations in alphabetical order?
-	
-	private static final String CREATE_MODE_BUTTON = "Create Mode";
+
+	private static final String CREATE_MODE_BUTTON = "Enter Create Mode";
+	private static final String QUIT_BUTTON = "Exit Create Mode";
 	private static final String PLAY_BUTTON = "Play";
 	private static final String DELETE_BUTTON = "Delete";
 	private static final String RECORD_BUTTON = "Record";
-	private static final String QUIT_BUTTON = "Exit Create Mode";
+	private static final String CANCEL_BUTTON = "Cancel";
 	private static final String CREATION_TEXT_FIELD = "Enter name of creation";
 	private static final String LABEL_EXISTING = "Existing Creations";
-	private static final String LABEL_CREATE = "Welcome to create mode!" + "\n\n" + 
-											"Enter the name for your creation and press the record button.";
+	private static final String LABEL_CREATE = "Welcome to create mode!";
+	
+	// string identifiers for each view used by CardLayout.
 	private static final String VIDEO_VIEW_ID = "Video View";
 	private static final String CREATE_MODE_ID = "Create Mode";
-	
+
 	// menu components
 	private JPanel _pnlMenu;
 	private JButton _btnPlay;
 	private JButton _btnDelete;
 	private JButton _btnCreateMode;
-	
+
 	// components for display of existing creations
 	private JPanel _pnlDisplayExisting;
 	private JLabel _lblExisting;
 	private JScrollPane _scrExisting;
 	private JList<Creation> _listExisting;
 	private DefaultListModel<Creation> _existingCrtns;
-	
+
 	// panel for the main area
 	private JPanel _pnlMain;
-	
+
 	// components for create mode view
 	private JPanel _pnlCreateMode;
 	private JTextField _txtCrtnName;
+	private JPanel _pnlTxtFieldWrapper;
 	private JButton _btnRecord;
-	private JButton _btnQuit;
+	private JButton _btnCancel;
 	private JLabel _lblCreate;
-	
+	private JPanel _pnlCreateModeMain;
+
 	// components for play/delete view
 	private JPanel _pnlVideoView;
 	private EmbeddedMediaPlayerComponent _video;
@@ -94,7 +103,7 @@ public class MathsAid extends JFrame {
 		_pnlMenu.add(_btnDelete);
 		_pnlMenu.add(_btnCreateMode);
 		add(_pnlMenu,BorderLayout.NORTH);
-		
+
 		// set up existing creations panel
 		_lblExisting = new JLabel(LABEL_EXISTING);
 		initializeCreationsList();
@@ -106,190 +115,194 @@ public class MathsAid extends JFrame {
 		_pnlDisplayExisting.add(_lblExisting);
 		_pnlDisplayExisting.add(_scrExisting);
 		add(_pnlDisplayExisting, BorderLayout.WEST);
-		
+
 		// set up video view 
 		_pnlVideoView = new JPanel(new BorderLayout());
 		_video = new EmbeddedMediaPlayerComponent();
 		_player = _video.getMediaPlayer();
 		_pnlVideoView.add(_video, BorderLayout.CENTER);
-		
+
 		// set up create mode view
-		_btnQuit = new JButton(QUIT_BUTTON);
+		_lblCreate = new JLabel(LABEL_CREATE, SwingConstants.CENTER);
 		_btnRecord = new JButton(RECORD_BUTTON);
+		_btnCancel = new JButton(CANCEL_BUTTON);
 		_txtCrtnName = new JTextField(CREATION_TEXT_FIELD);
-		_lblCreate = new JLabel(LABEL_CREATE);
+		_pnlTxtFieldWrapper = new JPanel(new BorderLayout());
+		_pnlTxtFieldWrapper.setBorder(BorderFactory.createEmptyBorder(40, 40, 40, 250));
+		_pnlTxtFieldWrapper.add(_txtCrtnName);
+		_pnlCreateModeMain = new JPanel();
+		_pnlCreateModeMain.setLayout(new BorderLayout());
+		_pnlCreateModeMain.add(_pnlTxtFieldWrapper,BorderLayout.NORTH);
+		_pnlCreateModeMain.add(_btnRecord,BorderLayout.SOUTH);
 		_pnlCreateMode = new JPanel();
-		_pnlCreateMode.setLayout(new BoxLayout(_pnlCreateMode, BoxLayout.Y_AXIS));
-		_pnlCreateMode.add(_lblCreate);
-		_pnlCreateMode.add(_txtCrtnName);
-		_pnlCreateMode.add(_btnRecord);
-		_pnlCreateMode.add(_btnQuit);
-		
-		// set up main panel to switch between video view and create mode
+		_pnlCreateMode.setLayout(new BorderLayout());
+		_pnlCreateMode.add(_lblCreate, BorderLayout.NORTH);
+		_pnlCreateMode.add(_pnlCreateModeMain);
+		_pnlCreateMode.add(_btnCancel, BorderLayout.SOUTH);
+
+
+		// set up main panel (which will switch between video view and create mode)
 		_pnlMain = new JPanel(new CardLayout());
 		_pnlMain.add(_pnlVideoView, VIDEO_VIEW_ID);
 		_pnlMain.add(_pnlCreateMode, CREATE_MODE_ID);
 		((CardLayout)_pnlMain.getLayout()).show(_pnlMain, VIDEO_VIEW_ID);
 		add(_pnlMain, BorderLayout.CENTER);
-		
+
 
 		/***************** Event Handlers ******************/
-		
+
 		// functionality for create mode button, should toggle main panel to display create mode
 		_btnCreateMode.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				((CardLayout)_pnlMain.getLayout()).show(_pnlMain, CREATE_MODE_ID);
-				// play/delete buttons should not be usable in this mode
-				_btnPlay.setEnabled(false);
-				_btnDelete.setEnabled(false);
-				_btnCreateMode.setEnabled(false);
-			}
-		});
-		
-		// functionality for quit button, should toggle main panel to display video view
-		_btnQuit.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				((CardLayout)_pnlMain.getLayout()).show(_pnlMain, VIDEO_VIEW_ID);
-				// play/delete functionality is allowed again, reenable buttons
-				_btnPlay.setEnabled(true);
-				_btnDelete.setEnabled(true);
-				_btnCreateMode.setEnabled(true);
+				if (_btnCreateMode.getText().equals(CREATE_MODE_BUTTON)) {
+					((CardLayout)_pnlMain.getLayout()).show(_pnlMain, CREATE_MODE_ID);
+					// play/delete buttons should not be usable in this mode
+					_btnPlay.setEnabled(false);
+					_btnDelete.setEnabled(false);
+					_btnCreateMode.setText(QUIT_BUTTON);
+				} else {
+					((CardLayout)_pnlMain.getLayout()).show(_pnlMain, VIDEO_VIEW_ID);
+					// play/delete buttons should be usable again
+					_btnPlay.setEnabled(true);
+					_btnDelete.setEnabled(true);
+					_btnCreateMode.setText(CREATE_MODE_BUTTON);
+				}
 			}
 		});
 
-//		// functionality for delete button
-//		_btnDelete.addActionListener(new ActionListener (){
-//			public void actionPerformed(ActionEvent e) {
-//
-//				Creation toDelete = _listCrtns.getSelectedValue();
-//				if (toDelete != null) {
-//					// ask user if they wish to delete
-//					int selection = JOptionPane.showConfirmDialog(_video, 
-//							"Are you sure you want to delete the creation \"" + toDelete +"\"?", 
-//							"Select an option",JOptionPane.YES_NO_OPTION);
-//
-//					if (selection == JOptionPane.YES_OPTION) {
-//						CreationManager.deleteCreation(toDelete);
-//					}
-//				}
-//			}
-//		});
-//
-//		// functionality for play button
-//		_btnPlay.addActionListener(new ActionListener () {
-//			public void actionPerformed(ActionEvent e) {
-//
-//				Creation toPlay = _listCrtns.getSelectedValue();
-//				if (toPlay != null) {
-//					_player.mute(false);
-//					_player.playMedia(toPlay.getFileName(Creation.Components.COMBINED).getPath(),"");
-//				}
-//			}
-//		});
-//
-//
-//		// functionality for create button
-//		_btnCreate.addActionListener(new ActionListener() {
-//			public void actionPerformed(ActionEvent e) {
-//
-//				String name = _txtCrtnName.getText();
-//				boolean validName = CreationManager.validName(name);
-//				if (!validName) {
-//					// let user know the creation name is not valid
-//					JOptionPane.showMessageDialog(_panelCreate, "The name you entered is not valid.\n" +
-//							"Names may only include alphanumeric character, hyphens, or underscores.", "Invalid Name",
-//							JOptionPane.ERROR_MESSAGE);
-//					return;
-//				}
-//
-//				Creation c = new Creation(name);
-//				boolean overwrite = true;
-//				if (_existingCrtns.contains(c)) {
-//					// ask for overwrite confirmation
-//					int overWriteSel = JOptionPane.showConfirmDialog(_panelCreate, "The creation \"" + name + "\" already exists.\n"
-//							+ "Do you wish to overwrite it?","Please select an option", JOptionPane.YES_NO_OPTION);
-//					if (overWriteSel != JOptionPane.YES_OPTION) {
-//						return;
-//					}
-//					// user has chosen to overwrite
-//					CreationManager.deleteCreation(c);
-//					_existingCrtns.removeElement(c);
-//				}
-//
-//				if (overwrite) {
-//					CreationManager.setUpCreation(c); // set up root directory
-//					
-//					// get paths to each component of the creation
-//					File pathToVideo = c.getFileName(Creation.Components.VIDEO);
-//					File pathToAudio = c.getFileName(Creation.Components.AUDIO);
-//					File pathToCombined = c.getFileName(Creation.Components.COMBINED);
-//					
-//					try {
-//						// bash command for creating the video
-//						ProcessBuilder vid = new ProcessBuilder("bash","-c",
-//								"ffmpeg -y -f lavfi -i color=c=blue -vf \"drawtext=fontfile=:fontsize=30:fontcolor=white:" +
-//										"x=(w-text_w)/2:y=(h-text_h)/2:text='" + c + "'\" -t 3 " + pathToVideo.getPath());
-//						Process vidP = vid.start();
-//						if (vidP.waitFor() == 1){
-//							CreationManager.deleteCreation(c); // remove partially finished creation
-//							return; 
-//						}
-//
-//						JOptionPane.showMessageDialog(_panelCreate, "Video component created!\n"
-//								+ "Press OK to record the audio for this creation");
-//
-//						while (true) {
-//							// bash command for recording audio component
-//							ProcessBuilder audio = new ProcessBuilder("bash","-c",
-//									"ffmpeg -f alsa -ac 2 -i default -t 3 " + pathToAudio.getPath());
-//							Process rec = audio.start();
-//							if (rec.waitFor() == 1) {
-//								CreationManager.deleteCreation(c); // remove partially finished creation
-//								return; // do not proceed if something went wrong
-//							}
-//
-//							int playBackSel = JOptionPane.showConfirmDialog(_panelCreate, "Would you like to listen to the recording?",
-//									"Please select an option", JOptionPane.YES_NO_OPTION);
-//							
-//							if (playBackSel == JOptionPane.YES_OPTION) {
-//								_player.mute(false);
-//								_player.playMedia(pathToAudio.getPath(), "");
-//							} else {
-//								break;
-//							}
-//
-//							// show dialog asking user to keep or redo recording
-//							Object[] options = {"Keep","Redo"};
-//							int selection = JOptionPane.showOptionDialog(_panelCreate, "Do you want to keep or redo this recording?",
-//									"Please choose an action to take", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE,
-//									null, options, null);
-//
-//							if (selection != 1) {
-//								break;
-//							} else {
-//								pathToAudio.delete();
-//								JOptionPane.showMessageDialog(_panelCreate, "Press OK to record");
-//							}
-//						}
-//
-//						// bash command to combine audio and video components
-//						ProcessBuilder combine = new ProcessBuilder("bash","-c",
-//								"ffmpeg -i " + pathToAudio.getPath() + " -i " + pathToVideo.getPath() + 
-//								" -codec copy " + pathToCombined.getPath());
-//						Process p = combine.start();
-//						if (p.waitFor() == 0) {
-//							_existingCrtns.addElement(c); // add creation to gui if merge was successful
-//						} else {
-//							CreationManager.deleteCreation(c); // delete all files if an error occurred
-//						}
-//
-//					} catch (IOException | InterruptedException e1) {
-//						// clean up by deleting all files if an exception was thrown
-//						CreationManager.deleteCreation(c);
-//					}
-//				}
-//			}
-//		});
+		//		// functionality for delete button
+		//		_btnDelete.addActionListener(new ActionListener (){
+		//			public void actionPerformed(ActionEvent e) {
+		//
+		//				Creation toDelete = _listCrtns.getSelectedValue();
+		//				if (toDelete != null) {
+		//					// ask user if they wish to delete
+		//					int selection = JOptionPane.showConfirmDialog(_video, 
+		//							"Are you sure you want to delete the creation \"" + toDelete +"\"?", 
+		//							"Select an option",JOptionPane.YES_NO_OPTION);
+		//
+		//					if (selection == JOptionPane.YES_OPTION) {
+		//						CreationManager.deleteCreation(toDelete);
+		//					}
+		//				}
+		//			}
+		//		});
+		//
+		//		// functionality for play button
+		//		_btnPlay.addActionListener(new ActionListener () {
+		//			public void actionPerformed(ActionEvent e) {
+		//
+		//				Creation toPlay = _listCrtns.getSelectedValue();
+		//				if (toPlay != null) {
+		//					_player.mute(false);
+		//					_player.playMedia(toPlay.getFileName(Creation.Components.COMBINED).getPath(),"");
+		//				}
+		//			}
+		//		});
+		//
+		//
+		//		// functionality for create button
+		//		_btnCreate.addActionListener(new ActionListener() {
+		//			public void actionPerformed(ActionEvent e) {
+		//
+		//				String name = _txtCrtnName.getText();
+		//				boolean validName = CreationManager.validName(name);
+		//				if (!validName) {
+		//					// let user know the creation name is not valid
+		//					JOptionPane.showMessageDialog(_panelCreate, "The name you entered is not valid.\n" +
+		//							"Names may only include alphanumeric character, hyphens, or underscores.", "Invalid Name",
+		//							JOptionPane.ERROR_MESSAGE);
+		//					return;
+		//				}
+		//
+		//				Creation c = new Creation(name);
+		//				boolean overwrite = true;
+		//				if (_existingCrtns.contains(c)) {
+		//					// ask for overwrite confirmation
+		//					int overWriteSel = JOptionPane.showConfirmDialog(_panelCreate, "The creation \"" + name + "\" already exists.\n"
+		//							+ "Do you wish to overwrite it?","Please select an option", JOptionPane.YES_NO_OPTION);
+		//					if (overWriteSel != JOptionPane.YES_OPTION) {
+		//						return;
+		//					}
+		//					// user has chosen to overwrite
+		//					CreationManager.deleteCreation(c);
+		//					_existingCrtns.removeElement(c);
+		//				}
+		//
+		//				if (overwrite) {
+		//					CreationManager.setUpCreation(c); // set up root directory
+		//					
+		//					// get paths to each component of the creation
+		//					File pathToVideo = c.getFileName(Creation.Components.VIDEO);
+		//					File pathToAudio = c.getFileName(Creation.Components.AUDIO);
+		//					File pathToCombined = c.getFileName(Creation.Components.COMBINED);
+		//					
+		//					try {
+		//						// bash command for creating the video
+		//						ProcessBuilder vid = new ProcessBuilder("bash","-c",
+		//								"ffmpeg -y -f lavfi -i color=c=blue -vf \"drawtext=fontfile=:fontsize=30:fontcolor=white:" +
+		//										"x=(w-text_w)/2:y=(h-text_h)/2:text='" + c + "'\" -t 3 " + pathToVideo.getPath());
+		//						Process vidP = vid.start();
+		//						if (vidP.waitFor() == 1){
+		//							CreationManager.deleteCreation(c); // remove partially finished creation
+		//							return; 
+		//						}
+		//
+		//						JOptionPane.showMessageDialog(_panelCreate, "Video component created!\n"
+		//								+ "Press OK to record the audio for this creation");
+		//
+		//						while (true) {
+		//							// bash command for recording audio component
+		//							ProcessBuilder audio = new ProcessBuilder("bash","-c",
+		//									"ffmpeg -f alsa -ac 2 -i default -t 3 " + pathToAudio.getPath());
+		//							Process rec = audio.start();
+		//							if (rec.waitFor() == 1) {
+		//								CreationManager.deleteCreation(c); // remove partially finished creation
+		//								return; // do not proceed if something went wrong
+		//							}
+		//
+		//							int playBackSel = JOptionPane.showConfirmDialog(_panelCreate, "Would you like to listen to the recording?",
+		//									"Please select an option", JOptionPane.YES_NO_OPTION);
+		//							
+		//							if (playBackSel == JOptionPane.YES_OPTION) {
+		//								_player.mute(false);
+		//								_player.playMedia(pathToAudio.getPath(), "");
+		//							} else {
+		//								break;
+		//							}
+		//
+		//							// show dialog asking user to keep or redo recording
+		//							Object[] options = {"Keep","Redo"};
+		//							int selection = JOptionPane.showOptionDialog(_panelCreate, "Do you want to keep or redo this recording?",
+		//									"Please choose an action to take", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE,
+		//									null, options, null);
+		//
+		//							if (selection != 1) {
+		//								break;
+		//							} else {
+		//								pathToAudio.delete();
+		//								JOptionPane.showMessageDialog(_panelCreate, "Press OK to record");
+		//							}
+		//						}
+		//
+		//						// bash command to combine audio and video components
+		//						ProcessBuilder combine = new ProcessBuilder("bash","-c",
+		//								"ffmpeg -i " + pathToAudio.getPath() + " -i " + pathToVideo.getPath() + 
+		//								" -codec copy " + pathToCombined.getPath());
+		//						Process p = combine.start();
+		//						if (p.waitFor() == 0) {
+		//							_existingCrtns.addElement(c); // add creation to gui if merge was successful
+		//						} else {
+		//							CreationManager.deleteCreation(c); // delete all files if an error occurred
+		//						}
+		//
+		//					} catch (IOException | InterruptedException e1) {
+		//						// clean up by deleting all files if an exception was thrown
+		//						CreationManager.deleteCreation(c);
+		//					}
+		//				}
+		//			}
+		//		});
 
 	}
 
@@ -298,7 +311,7 @@ public class MathsAid extends JFrame {
 
 		NativeDiscovery nd = new NativeDiscovery();
 		nd.discover();
-		
+
 		System.out.println("New Version! 2.0");
 
 		SwingUtilities.invokeLater(new Runnable() {
