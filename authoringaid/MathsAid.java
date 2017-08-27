@@ -3,6 +3,7 @@ package authoringaid;
 import javax.swing.SwingUtilities;
 import javax.swing.border.BevelBorder;
 
+import authoringaid.Creation.Components;
 import uk.co.caprica.vlcj.component.EmbeddedMediaPlayerComponent;
 import uk.co.caprica.vlcj.discovery.NativeDiscovery;
 import uk.co.caprica.vlcj.player.embedded.EmbeddedMediaPlayer;
@@ -29,6 +30,8 @@ import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
+import javax.swing.JComponent;
+
 import java.io.File;
 import java.io.IOException;
 
@@ -45,7 +48,9 @@ public class MathsAid extends JFrame {
 	private static final String CANCEL_BUTTON = "Cancel";
 	private static final String CREATION_TEXT_FIELD = "Enter name of creation";
 	private static final String LABEL_EXISTING = "Existing Creations";
-	private static final String LABEL_CREATE = "Welcome to create mode!";
+	private static final String LABEL_CREATE_WELCOME = "Welcome to create mode!";
+	private static final String LABEL_CREATE_INFO = "Please enter the name of your creation below";
+	private static final String CREATE_BUTTON = "Create";
 
 	// string identifiers for each view used by CardLayout.
 	private static final String VIDEO_VIEW_ID = "Video View";
@@ -64,23 +69,24 @@ public class MathsAid extends JFrame {
 	private JList<Creation> _listExisting;
 	private DefaultListModel<Creation> _existingCrtns;
 
-	// panel for the main area
+	// panel for the main area (uses card layout to toggle between views)
 	private JPanel _pnlMain;
 
 	// components for create mode view
 	private JPanel _pnlCreateMode;
 	private JTextField _txtCrtnName;
-	private JPanel _pnlTxtFieldWrapper;
-	private JButton _btnRecord;
-	private JButton _btnCancel;
-	private JLabel _lblCreate;
-	private JPanel _pnlCreateModeMain;
+	private JButton _btnCreate;
+	private JLabel _lblCreateWelcome;
+	private JLabel _lblCreateInfo;
+	private JPanel _pnlCreateModeInput;
+	private JPanel _pnlCreateBtnWrapper;
+	private JLabel _lblCreateModeStatus;
 
 	// components for play/delete view
 	private JPanel _pnlVideoView;
 	private EmbeddedMediaPlayerComponent _video;
 	private final EmbeddedMediaPlayer _player;
-
+	
 	public MathsAid() {
 		super("Maths Authoring Aid");
 		setSize(700,600);
@@ -105,12 +111,20 @@ public class MathsAid extends JFrame {
 		add(_pnlMenu,BorderLayout.NORTH);
 
 		// set up existing creations panel
-		_lblExisting = new JLabel(LABEL_EXISTING);
+		_lblExisting = new JLabel(LABEL_EXISTING, SwingConstants.CENTER);
+		_lblExisting.setAlignmentX(CENTER_ALIGNMENT);
+		_lblExisting.setFont(_lblExisting.getFont().deriveFont((float)14));
+		_lblExisting.setBorder(BorderFactory.createEmptyBorder(0, 0, 5, 0));
+		
 		initializeCreationsList();
 		_listExisting = new JList<Creation>(_existingCrtns);
 		_listExisting.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		_listExisting.setFont(_listExisting.getFont().deriveFont((float)14));
+		
 		_scrExisting = new JScrollPane(_listExisting);
+		
 		_pnlDisplayExisting = new JPanel();
+		_pnlDisplayExisting.setPreferredSize(new Dimension(180,500));
 		_pnlDisplayExisting.setLayout(new BoxLayout(_pnlDisplayExisting, BoxLayout.Y_AXIS));
 		_pnlDisplayExisting.add(_lblExisting);
 		_pnlDisplayExisting.add(_scrExisting);
@@ -123,29 +137,53 @@ public class MathsAid extends JFrame {
 		_pnlVideoView.add(_video, BorderLayout.CENTER);
 
 		// set up create mode view
-		_lblCreate = new JLabel(LABEL_CREATE, SwingConstants.CENTER);
-		_btnRecord = new JButton(RECORD_BUTTON);
-		_btnCancel = new JButton(CANCEL_BUTTON);
-		_txtCrtnName = new JTextField(CREATION_TEXT_FIELD);
-		_pnlTxtFieldWrapper = new JPanel(new BorderLayout());
-		_pnlTxtFieldWrapper.setBorder(BorderFactory.createEmptyBorder(40, 40, 40, 250));
-		_pnlTxtFieldWrapper.add(_txtCrtnName);
-		_pnlCreateModeMain = new JPanel();
-		_pnlCreateModeMain.setLayout(new BorderLayout());
-		_pnlCreateModeMain.add(_pnlTxtFieldWrapper,BorderLayout.NORTH);
-		_pnlCreateModeMain.add(_btnRecord,BorderLayout.SOUTH);
+		_lblCreateWelcome = new JLabel(LABEL_CREATE_WELCOME, SwingConstants.CENTER);
+		_lblCreateWelcome.setBorder(BorderFactory.createEmptyBorder(20, 0, 50, 0));
+		_lblCreateWelcome.setFont(_lblCreateWelcome.getFont().deriveFont((float)20));
+		
+		_lblCreateInfo = new JLabel(LABEL_CREATE_INFO, SwingConstants.CENTER);
+		_lblCreateInfo.setAlignmentX(CENTER_ALIGNMENT);
+		_lblCreateInfo.setFont(_lblCreateInfo.getFont().deriveFont((float)15));
+		_lblCreateInfo.setBorder(BorderFactory.createEmptyBorder(0,0,15,0));
+		
+		_txtCrtnName = new JTextField();
+		_txtCrtnName.setHorizontalAlignment(SwingConstants.CENTER);
+		_txtCrtnName.setFont(_txtCrtnName.getFont().deriveFont((float)15));
+		_txtCrtnName.setAlignmentX(CENTER_ALIGNMENT);
+		_txtCrtnName.setMaximumSize(new Dimension(400,25));
+		
+		_btnCreate = new JButton(CREATE_BUTTON);
+		_btnCreate.setAlignmentX(CENTER_ALIGNMENT);
+		_btnCreate.setFont(_btnCreate.getFont().deriveFont((float)16));
+		_pnlCreateBtnWrapper = new JPanel();
+		_pnlCreateBtnWrapper.setAlignmentX(CENTER_ALIGNMENT);
+		_pnlCreateBtnWrapper.setBorder(BorderFactory.createEmptyBorder(25,0,0,0));
+		_pnlCreateBtnWrapper.add(_btnCreate);
+
+		_pnlCreateModeInput = new JPanel();
+		_pnlCreateModeInput.setLayout(new BoxLayout(_pnlCreateModeInput,BoxLayout.Y_AXIS));
+		_pnlCreateModeInput.add(_lblCreateInfo);
+		_pnlCreateModeInput.add(_txtCrtnName);
+		_pnlCreateModeInput.add(_pnlCreateBtnWrapper);
+		_pnlCreateModeInput.setBorder(BorderFactory.createEmptyBorder(50,70,80,70));
+		
+		_lblCreateModeStatus = new JLabel("Initial Text");
+		_lblCreateModeStatus.setFont(_lblCreateModeStatus.getFont().deriveFont((float)16));
+		_lblCreateModeStatus.setHorizontalAlignment(SwingConstants.CENTER);
+		_lblCreateModeStatus.setPreferredSize(new Dimension(1000,150));
+		
+		
 		_pnlCreateMode = new JPanel();
 		_pnlCreateMode.setLayout(new BorderLayout());
-		_pnlCreateMode.add(_lblCreate, BorderLayout.NORTH);
-		_pnlCreateMode.add(_pnlCreateModeMain);
-		_pnlCreateMode.add(_btnCancel, BorderLayout.SOUTH);
-
+		_pnlCreateMode.add(_lblCreateWelcome, BorderLayout.NORTH);
+		_pnlCreateMode.add(_pnlCreateModeInput, BorderLayout.CENTER);
+		_pnlCreateMode.add(_lblCreateModeStatus, BorderLayout.SOUTH);
 
 		// set up main panel (which will switch between video view and create mode)
 		_pnlMain = new JPanel(new CardLayout());
 		_pnlMain.add(_pnlVideoView, VIDEO_VIEW_ID);
 		_pnlMain.add(_pnlCreateMode, CREATE_MODE_ID);
-		((CardLayout)_pnlMain.getLayout()).show(_pnlMain, VIDEO_VIEW_ID);
+		((CardLayout)_pnlMain.getLayout()).show(_pnlMain, VIDEO_VIEW_ID); // initially show video view
 		add(_pnlMain, BorderLayout.CENTER);
 
 
@@ -320,6 +358,7 @@ public class MathsAid extends JFrame {
 			public void run() {
 				MathsAid frame = new MathsAid();
 				frame.setVisible(true);
+				frame.setResizable(false);
 			}
 		});
 	}
