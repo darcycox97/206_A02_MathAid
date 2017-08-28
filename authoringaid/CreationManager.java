@@ -36,7 +36,7 @@ public class CreationManager {
 	 * @param name the proposed name for a creation
 	 */
 	public static boolean validName(String name) {
-		return Pattern.matches("[\\w\\-]+", name);
+		return Pattern.matches("[\\w\\-+=]+", name);
 	}
 
 }

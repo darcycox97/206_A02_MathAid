@@ -4,6 +4,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.border.BevelBorder;
 
 import authoringaid.Creation.Components;
+import authoringaid.CreationWorker.WorkerUse;
 import uk.co.caprica.vlcj.component.EmbeddedMediaPlayerComponent;
 import uk.co.caprica.vlcj.discovery.NativeDiscovery;
 import uk.co.caprica.vlcj.player.embedded.EmbeddedMediaPlayer;
@@ -86,7 +87,7 @@ public class MathsAid extends JFrame {
 	private JPanel _pnlVideoView;
 	private EmbeddedMediaPlayerComponent _video;
 	private final EmbeddedMediaPlayer _player;
-	
+
 	public MathsAid() {
 		super("Maths Authoring Aid");
 		setSize(700,600);
@@ -115,14 +116,14 @@ public class MathsAid extends JFrame {
 		_lblExisting.setAlignmentX(CENTER_ALIGNMENT);
 		_lblExisting.setFont(_lblExisting.getFont().deriveFont((float)14));
 		_lblExisting.setBorder(BorderFactory.createEmptyBorder(0, 0, 5, 0));
-		
+
 		initializeCreationsList();
 		_listExisting = new JList<Creation>(_existingCrtns);
 		_listExisting.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		_listExisting.setFont(_listExisting.getFont().deriveFont((float)14));
-		
+
 		_scrExisting = new JScrollPane(_listExisting);
-		
+
 		_pnlDisplayExisting = new JPanel();
 		_pnlDisplayExisting.setPreferredSize(new Dimension(180,500));
 		_pnlDisplayExisting.setLayout(new BoxLayout(_pnlDisplayExisting, BoxLayout.Y_AXIS));
@@ -140,18 +141,18 @@ public class MathsAid extends JFrame {
 		_lblCreateWelcome = new JLabel(LABEL_CREATE_WELCOME, SwingConstants.CENTER);
 		_lblCreateWelcome.setBorder(BorderFactory.createEmptyBorder(20, 0, 50, 0));
 		_lblCreateWelcome.setFont(_lblCreateWelcome.getFont().deriveFont((float)20));
-		
+
 		_lblCreateInfo = new JLabel(LABEL_CREATE_INFO, SwingConstants.CENTER);
 		_lblCreateInfo.setAlignmentX(CENTER_ALIGNMENT);
 		_lblCreateInfo.setFont(_lblCreateInfo.getFont().deriveFont((float)15));
 		_lblCreateInfo.setBorder(BorderFactory.createEmptyBorder(0,0,15,0));
-		
+
 		_txtCrtnName = new JTextField();
 		_txtCrtnName.setHorizontalAlignment(SwingConstants.CENTER);
 		_txtCrtnName.setFont(_txtCrtnName.getFont().deriveFont((float)15));
 		_txtCrtnName.setAlignmentX(CENTER_ALIGNMENT);
 		_txtCrtnName.setMaximumSize(new Dimension(400,25));
-		
+
 		_btnCreate = new JButton(CREATE_BUTTON);
 		_btnCreate.setAlignmentX(CENTER_ALIGNMENT);
 		_btnCreate.setFont(_btnCreate.getFont().deriveFont((float)16));
@@ -166,13 +167,13 @@ public class MathsAid extends JFrame {
 		_pnlCreateModeInput.add(_txtCrtnName);
 		_pnlCreateModeInput.add(_pnlCreateBtnWrapper);
 		_pnlCreateModeInput.setBorder(BorderFactory.createEmptyBorder(50,70,80,70));
-		
+
 		_lblCreateModeStatus = new JLabel("Initial Text");
 		_lblCreateModeStatus.setFont(_lblCreateModeStatus.getFont().deriveFont((float)16));
 		_lblCreateModeStatus.setHorizontalAlignment(SwingConstants.CENTER);
 		_lblCreateModeStatus.setPreferredSize(new Dimension(1000,150));
-		
-		
+		_lblCreateModeStatus.setHorizontalTextPosition(SwingConstants.CENTER);
+
 		_pnlCreateMode = new JPanel();
 		_pnlCreateMode.setLayout(new BorderLayout());
 		_pnlCreateMode.add(_lblCreateWelcome, BorderLayout.NORTH);
@@ -204,6 +205,41 @@ public class MathsAid extends JFrame {
 					_btnPlay.setEnabled(true);
 					_btnDelete.setEnabled(true);
 					_btnCreateMode.setText(CREATE_MODE_BUTTON);
+				}
+			}
+		});
+
+		// functionality for create button
+		_btnCreate.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e) {
+				// functionality when this button says create
+				String crtnName = _txtCrtnName.getText();
+				Creation c = new Creation(crtnName);
+				if (_btnCreate.getText().equals(CREATE_BUTTON)) {
+					
+					if (CreationManager.validName(crtnName)) {
+						if (_existingCrtns.contains(c)) {
+							int overWriteSel = JOptionPane.showConfirmDialog(_pnlCreateMode, "The creation \"" + c + "\" already exists.\n"
+									+ "Do you wish to overwrite it?","Creation already exists", JOptionPane.YES_NO_OPTION);
+							if (overWriteSel != JOptionPane.YES_OPTION) {
+								return; // exit function if user does not wish to overwrite.
+							}
+						}
+						CreationManager.setUpCreation(c);
+						CreationWorker vidCreator = new CreationWorker(c, _pnlCreateMode, _existingCrtns, _lblCreateModeStatus, 
+								WorkerUse.VIDEO, _btnCreate);
+						vidCreator.execute();
+					} else {
+						JOptionPane.showMessageDialog(_pnlCreateMode,"Names may only include alphanumeric characters, hyphens, or underscores.",
+								"Invalid Name",JOptionPane.ERROR_MESSAGE);
+						return;
+					}
+					
+					// functionality when this button says record
+				} else {
+					CreationWorker creator = new CreationWorker(c,_pnlCreateMode,_existingCrtns,_lblCreateModeStatus,
+							WorkerUse.REMAINING, _btnCreate);
+					creator.execute();
 				}
 			}
 		});

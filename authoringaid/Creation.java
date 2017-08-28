@@ -9,7 +9,7 @@ public class Creation {
 	private File _audio;
 	private File _combined;
 
-	public enum Components {
+	enum Components {
 		ROOT, VIDEO, AUDIO, COMBINED
 	}
 
