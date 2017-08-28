@@ -4,7 +4,6 @@ import javax.swing.SwingUtilities;
 import javax.swing.border.BevelBorder;
 
 import authoringaid.Creation.Components;
-import authoringaid.CreationWorker.WorkerUse;
 import uk.co.caprica.vlcj.component.EmbeddedMediaPlayerComponent;
 import uk.co.caprica.vlcj.discovery.NativeDiscovery;
 import uk.co.caprica.vlcj.player.embedded.EmbeddedMediaPlayer;
@@ -190,7 +189,7 @@ public class MathsAid extends JFrame {
 
 		/***************** Event Handlers ******************/
 
-		// functionality for create mode button, should toggle main panel to display create mode
+		// functionality for create mode button, should toggle main panel to display create mode and video view
 		_btnCreateMode.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				if (_btnCreateMode.getText().equals(CREATE_MODE_BUTTON)) {
@@ -209,39 +208,62 @@ public class MathsAid extends JFrame {
 			}
 		});
 
-		// functionality for create button
+		// functionality for create button, has different functionality depends if it says record or create
 		_btnCreate.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e) {
-				// functionality when this button says create
+
 				String crtnName = _txtCrtnName.getText();
 				Creation c = new Creation(crtnName);
+
 				if (_btnCreate.getText().equals(CREATE_BUTTON)) {
-					
-					if (CreationManager.validName(crtnName)) {
+					if (CreationManager.validName(crtnName)) { // check if name is valid
 						if (_existingCrtns.contains(c)) {
+							// ask user if they wish to overwrite
 							int overWriteSel = JOptionPane.showConfirmDialog(_pnlCreateMode, "The creation \"" + c + "\" already exists.\n"
 									+ "Do you wish to overwrite it?","Creation already exists", JOptionPane.YES_NO_OPTION);
 							if (overWriteSel != JOptionPane.YES_OPTION) {
 								return; // exit function if user does not wish to overwrite.
 							}
 						}
+						CreationManager.deleteCreation(c);
+						_existingCrtns.removeElement(c);
 						CreationManager.setUpCreation(c);
-						CreationWorker vidCreator = new CreationWorker(c, _pnlCreateMode, _existingCrtns, _lblCreateModeStatus, 
-								WorkerUse.VIDEO, _btnCreate);
-						vidCreator.execute();
+
+						try {
+							// call ffmpeg to produce video component
+							File vidPath = c.getFileName(Creation.Components.VIDEO);
+							ProcessBuilder vid = new ProcessBuilder("bash","-c",
+									"ffmpeg -y -f lavfi -i color=c=blue -vf \"drawtext=fontfile=:fontsize=30:fontcolor=white:" +
+											"x=(w-text_w)/2:y=(h-text_h)/2:text='" + c + "'\" -t 3 " + vidPath.getPath());
+							Process vidP = vid.start();
+							int exitVal =  vidP.waitFor();
+							if (exitVal != 0) {
+								return; // exit if error occurred
+							}
+						} catch (IOException | InterruptedException e1) {
+							CreationManager.deleteCreation(c);
+							return;
+						}
+						_btnCreate.setText(RECORD_BUTTON);
+						_lblCreateModeStatus.setText("Press the record button to begin recording");
+
 					} else {
 						JOptionPane.showMessageDialog(_pnlCreateMode,"Names may only include alphanumeric characters, hyphens, or underscores.",
 								"Invalid Name",JOptionPane.ERROR_MESSAGE);
 						return;
 					}
-					
+
 					// functionality when this button says record
 				} else {
-					CreationWorker creator = new CreationWorker(c,_pnlCreateMode,_existingCrtns,_lblCreateModeStatus,
-							WorkerUse.REMAINING, _btnCreate);
+
+
+					CreationWorker creator = new CreationWorker(c,_pnlCreateMode,_lblCreateModeStatus, _btnCreate);
 					creator.execute();
+
 				}
+
 			}
+
 		});
 
 		//		// functionality for delete button
