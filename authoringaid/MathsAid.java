@@ -205,6 +205,9 @@ public class MathsAid extends JFrame implements CreationWorkerListener {
 					// remove partially generated creation files (if they exist), and reset GUI to its intial state
 					if (_crtnToGenerate != null) {
 						cleanUp();
+					} else {
+						_txtCrtnName.setText("");
+						_lblCreateModeStatus.setText("");
 					}
 				}
 			}
@@ -372,6 +375,7 @@ public class MathsAid extends JFrame implements CreationWorkerListener {
 				_lblCreateModeStatus.setText("Creation \"" + c + "\" successfully created");
 				_btnCreate.setText(CREATE_BUTTON);
 				_btnCreate.setEnabled(true);
+				_txtCrtnName.setText("");
 				_crtnToGenerate = null; // reset this field because are not currently creating.
 			} else {
 				cleanUp();
