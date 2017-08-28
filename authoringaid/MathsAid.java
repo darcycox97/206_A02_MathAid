@@ -36,7 +36,7 @@ import java.io.File;
 import java.io.IOException;
 
 @SuppressWarnings("serial")
-public class MathsAid extends JFrame {
+public class MathsAid extends JFrame implements CreationWorkerListener {
 	//TODO: Create constants to refer to component sizes/display text
 	//TODO: display initial creations in alphabetical order?
 
@@ -51,6 +51,7 @@ public class MathsAid extends JFrame {
 	private static final String LABEL_CREATE_WELCOME = "Welcome to create mode!";
 	private static final String LABEL_CREATE_INFO = "Please enter the name of your creation below";
 	private static final String CREATE_BUTTON = "Create";
+	private static final String RECORD_PROMPT = "Press the record button to start recording";
 
 	// string identifiers for each view used by CardLayout.
 	private static final String VIDEO_VIEW_ID = "Video View";
@@ -86,6 +87,8 @@ public class MathsAid extends JFrame {
 	private JPanel _pnlVideoView;
 	private EmbeddedMediaPlayerComponent _video;
 	private final EmbeddedMediaPlayer _player;
+	
+	private static Creation _crtnToGenerate; // static field used to store the current creation being generated.
 
 	public MathsAid() {
 		super("Maths Authoring Aid");
@@ -212,40 +215,41 @@ public class MathsAid extends JFrame {
 		_btnCreate.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e) {
 
-				String crtnName = _txtCrtnName.getText();
-				Creation c = new Creation(crtnName);
-
 				if (_btnCreate.getText().equals(CREATE_BUTTON)) {
+					
+					String crtnName = _txtCrtnName.getText();
+					_crtnToGenerate = new Creation(crtnName);
+					
 					if (CreationManager.validName(crtnName)) { // check if name is valid
-						if (_existingCrtns.contains(c)) {
+						if (_existingCrtns.contains(_crtnToGenerate)) {
 							// ask user if they wish to overwrite
-							int overWriteSel = JOptionPane.showConfirmDialog(_pnlCreateMode, "The creation \"" + c + "\" already exists.\n"
+							int overWriteSel = JOptionPane.showConfirmDialog(_pnlCreateMode, "The creation \"" + _crtnToGenerate + "\" already exists.\n"
 									+ "Do you wish to overwrite it?","Creation already exists", JOptionPane.YES_NO_OPTION);
 							if (overWriteSel != JOptionPane.YES_OPTION) {
 								return; // exit function if user does not wish to overwrite.
 							}
 						}
-						CreationManager.deleteCreation(c);
-						_existingCrtns.removeElement(c);
-						CreationManager.setUpCreation(c);
+						CreationManager.deleteCreation(_crtnToGenerate);
+						_existingCrtns.removeElement(_crtnToGenerate);
+						CreationManager.setUpCreation(_crtnToGenerate);
 
 						try {
 							// call ffmpeg to produce video component
-							File vidPath = c.getFileName(Creation.Components.VIDEO);
+							File vidPath = _crtnToGenerate.getFileName(Creation.Components.VIDEO);
 							ProcessBuilder vid = new ProcessBuilder("bash","-c",
 									"ffmpeg -y -f lavfi -i color=c=blue -vf \"drawtext=fontfile=:fontsize=30:fontcolor=white:" +
-											"x=(w-text_w)/2:y=(h-text_h)/2:text='" + c + "'\" -t 3 " + vidPath.getPath());
+											"x=(w-text_w)/2:y=(h-text_h)/2:text='" + _crtnToGenerate + "'\" -t 3 " + vidPath.getPath());
 							Process vidP = vid.start();
 							int exitVal =  vidP.waitFor();
 							if (exitVal != 0) {
 								return; // exit if error occurred
 							}
 						} catch (IOException | InterruptedException e1) {
-							CreationManager.deleteCreation(c);
+							CreationManager.deleteCreation(_crtnToGenerate);
 							return;
 						}
 						_btnCreate.setText(RECORD_BUTTON);
-						_lblCreateModeStatus.setText("Press the record button to begin recording");
+						_lblCreateModeStatus.setText(RECORD_PROMPT);
 
 					} else {
 						JOptionPane.showMessageDialog(_pnlCreateMode,"Names may only include alphanumeric characters, hyphens, or underscores.",
@@ -255,11 +259,9 @@ public class MathsAid extends JFrame {
 
 					// functionality when this button says record
 				} else {
-
-
-					CreationWorker creator = new CreationWorker(c,_pnlCreateMode,_lblCreateModeStatus, _btnCreate);
+					CreationWorker creator = new CreationWorker(_crtnToGenerate,_pnlCreateMode,_lblCreateModeStatus, _btnCreate);
+					creator.addCreationWorkerListener(MathsAid.this);
 					creator.execute();
-
 				}
 
 			}
@@ -420,6 +422,71 @@ public class MathsAid extends JFrame {
 			}
 		});
 	}
+
+	/**
+	 * See CreationWorkerListener interface
+	 */
+	public void audioComponentCreated(Creation c) {
+
+		_lblCreateModeStatus.setEnabled(true);
+
+		File pathToAudio = c.getFileName(Components.AUDIO);
+		File pathToVideo = c.getFileName(Components.VIDEO);
+		File pathToCombined = c.getFileName(Components.COMBINED);
+
+		while (true) {
+			// ask user if they want to listen to the recording
+			int playBackSel = JOptionPane.showConfirmDialog(_pnlCreateMode, "Would you like to listen to the recording?",
+					"Please select an option", JOptionPane.YES_NO_OPTION);
+
+			if (playBackSel == JOptionPane.YES_OPTION) {
+				_player.mute(false);
+				_player.playMedia(pathToAudio.getPath(), "");
+			} else {
+				break;
+			}
+
+			// show dialog asking user to keep or redo recording
+			Object[] options = {"Keep","Redo"};
+			int selection = JOptionPane.showOptionDialog(_pnlCreateMode, "Do you want to keep or redo this recording?",
+					"Please choose an action to take", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE,
+					null, options, null);
+
+			if (selection != 1) {
+				break;
+			} else {
+				pathToAudio.delete();
+				_lblCreateModeStatus.setText(RECORD_PROMPT);
+				_btnCreate.setEnabled(true);
+				return;
+			}
+		}
+
+		// create combined file once user chooses to keep the recording
+		try {
+			ProcessBuilder combine = new ProcessBuilder("bash","-c",
+					"ffmpeg -i " + pathToAudio.getPath() + " -i " + pathToVideo.getPath() +
+					" -codec copy " + pathToCombined.getPath());
+			Process p = combine.start();
+			if (p.waitFor() == 0) {
+				_existingCrtns.addElement(c); // add creation to gui if merge was successful
+				_lblCreateModeStatus.setText("Creation \"" + c + "\" successfully created");
+				_btnCreate.setText(CREATE_BUTTON);
+				_btnCreate.setEnabled(true);
+				_crtnToGenerate = null; // reset this field because we are now not creation a creation
+			} else {
+				_lblCreateModeStatus.setText("Something went wrong. Please try again");
+				CreationManager.deleteCreation(c); // delete all files if an error occurred
+			}
+		} catch (IOException | InterruptedException e) {
+			_lblCreateModeStatus.setText("Something went wrong. Please try again");
+			CreationManager.deleteCreation(c);
+		}
+
+	}
+
+
+
 
 	/**
 	 *  Initialize the list model on program startup, by scanning through

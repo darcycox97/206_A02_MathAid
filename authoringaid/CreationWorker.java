@@ -2,6 +2,7 @@ package authoringaid;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
@@ -25,7 +26,8 @@ public class CreationWorker extends SwingWorker<Integer, Void> {
 	private JComponent _gui;
 	private JLabel _statusUpdates;
 	private JButton _btnRecordCreate;
-
+	
+	private ArrayList<CreationWorkerListener> _listeners;
 
 	public CreationWorker(Creation creation, JComponent gui, JLabel statusLabel, 
 			JButton btnToChange) {
@@ -33,6 +35,11 @@ public class CreationWorker extends SwingWorker<Integer, Void> {
 		_gui = gui;
 		_statusUpdates = statusLabel;
 		_btnRecordCreate = btnToChange;
+		_listeners = new ArrayList<CreationWorkerListener>();
+	}
+	
+	public void addCreationWorkerListener(CreationWorkerListener l) {
+		_listeners.add(l);
 	}
 
 	protected Integer doInBackground() {
@@ -110,7 +117,10 @@ public class CreationWorker extends SwingWorker<Integer, Void> {
 			int exit = get();
 			if (exit == 0) {
 				_statusUpdates.setText("Audio component generated successfully.");
-				_btnRecordCreate.setEnabled(true);
+				for (CreationWorkerListener l : _listeners) {
+					l.audioComponentCreated(_creation);
+				}
+				
 			} else {
 				// failure, delete the creation to clean up
 				deleteCrtnAndShowErrorMessage();
