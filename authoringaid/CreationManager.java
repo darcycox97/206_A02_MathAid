@@ -1,5 +1,7 @@
 package authoringaid;
 
+import java.util.regex.Pattern;
+
 /**
  * Class consisting of static methods with the intention of allowing ease of
  * operations with creations.
@@ -26,6 +28,15 @@ public class CreationManager {
 	 */
 	public static void setUpCreation(Creation c) {
 		c.getFileName(Creation.Components.ROOT).mkdirs();
+	}
+	
+	/**
+	 * Determines if the given name is appropriate for a creation.
+	 * Allows alphanumeric characters, hyphens and underscores.
+	 * @param name the proposed name for a creation
+	 */
+	public static boolean validName(String name) {
+		return Pattern.matches("[\\w\\-+=]+", name);
 	}
 
 }
