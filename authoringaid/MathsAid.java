@@ -38,8 +38,6 @@ import java.util.List;
 public class MathsAid extends JFrame implements CreationWorkerListener {
 	//TODO: Tidy up constants
 	//TODO: Tidy up layout
-	//TODO: display initial creations in alphabetical order?
-	//TODO: Implement preview
 
 	// constants to use for setting text of components in the gui
 	private static final String CREATE_MODE_BUTTON = "Enter Create Mode";
@@ -105,6 +103,12 @@ public class MathsAid extends JFrame implements CreationWorkerListener {
 
 		_crtnToGenerate = null; // at this point we aren't generating any creation
 
+		// set up video view
+		_pnlVideoView = new JPanel(new BorderLayout());
+		_video = new EmbeddedMediaPlayerComponent();
+		_pnlVideoView.add(_video, BorderLayout.CENTER);
+		_player = _video.getMediaPlayer();
+
 		// set up menu panel
 		_pnlMenu = new JPanel();
 		_btnCreateMode = new JButton(CREATE_MODE_BUTTON);
@@ -125,6 +129,7 @@ public class MathsAid extends JFrame implements CreationWorkerListener {
 		_listExisting = new JList<Creation>(_existingCrtns);
 		_listExisting.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		_listExisting.setFont(_listExisting.getFont().deriveFont((float)14));
+		_listExisting.addListSelectionListener(new SelectionPreview(_player));
 
 		_scrExisting = new JScrollPane(_listExisting);
 
@@ -134,12 +139,6 @@ public class MathsAid extends JFrame implements CreationWorkerListener {
 		_pnlDisplayExisting.add(_lblExisting);
 		_pnlDisplayExisting.add(_scrExisting);
 		add(_pnlDisplayExisting, BorderLayout.WEST);
-
-		// set up video view
-		_pnlVideoView = new JPanel(new BorderLayout());
-		_video = new EmbeddedMediaPlayerComponent();
-		_pnlVideoView.add(_video, BorderLayout.CENTER);
-		_player = _video.getMediaPlayer();
 
 		// set up create mode view
 		_lblCreateWelcome = new JLabel(LABEL_CREATE_WELCOME, SwingConstants.CENTER);
@@ -306,18 +305,6 @@ public class MathsAid extends JFrame implements CreationWorkerListener {
 				}
 			}
 		});
-
-		//		// stops playback when the video has completed
-		//		_player.addMediaPlayerEventListener(new MediaPlayerEventAdapter() {
-		//			@Override
-		//			public void finished(MediaPlayer player) {
-		//				SwingUtilities.invokeLater(new Runnable() {
-		//					public void run() {
-		//						_player.stop();
-		//					}
-		//				});
-		//			}
-		//		});
 
 	}
 
