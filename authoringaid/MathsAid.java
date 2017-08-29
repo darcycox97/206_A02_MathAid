@@ -34,6 +34,7 @@ public class MathsAid extends JFrame implements CreationWorkerListener {
 	//TODO: Tidy up constants
 	//TODO: Tidy up layout
 	//TODO: display initial creations in alphabetical order?
+	//TODO: Implement preview
 
 	// constants to use for setting text of components in the gui
 	private static final String CREATE_MODE_BUTTON = "Enter Create Mode";
@@ -82,7 +83,7 @@ public class MathsAid extends JFrame implements CreationWorkerListener {
 	private EmbeddedMediaPlayerComponent _video;
 	private final EmbeddedMediaPlayer _player;
 
-	private static Creation _crtnToGenerate; // static field used to store the current creation being generated.
+	private Creation _crtnToGenerate; // used to store the current creation being generated.
 
 	public MathsAid() {
 		super("Maths Authoring Aid");
@@ -97,6 +98,8 @@ public class MathsAid extends JFrame implements CreationWorkerListener {
 
 		/***************** GUI Layout Setup **************************/
 
+		_crtnToGenerate = null; // at this point we aren't generating any creation
+		
 		// set up menu panel
 		_pnlMenu = new JPanel();
 		_btnCreateMode = new JButton(CREATE_MODE_BUTTON);
@@ -294,7 +297,7 @@ public class MathsAid extends JFrame implements CreationWorkerListener {
 				Creation toPlay = _listExisting.getSelectedValue();
 				if (toPlay != null) {
 					_player.mute(false);
-					_player.playMedia(toPlay.getFileName(Creation.Components.COMBINED).getPath(),"");
+					_player.playMedia(toPlay.getFileName(Components.COMBINED).getPath(),"");
 				}
 			}
 		});
@@ -376,7 +379,7 @@ public class MathsAid extends JFrame implements CreationWorkerListener {
 				_btnCreate.setText(CREATE_BUTTON);
 				_btnCreate.setEnabled(true);
 				_txtCrtnName.setText("");
-				_crtnToGenerate = null; // reset this field because are not currently creating.
+				_crtnToGenerate = null; // reset this field because we are not currently generating a creation.
 			} else {
 				cleanUp();
 			}
