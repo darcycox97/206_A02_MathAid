@@ -2,7 +2,7 @@ package authoringaid;
 
 import java.io.File;
 
-public class Creation {
+public class Creation implements Comparable<Creation> {
 	private String _name;
 	private File _path;
 	private File _video;
@@ -56,6 +56,23 @@ public class Creation {
 		return _name;
 	}
 
-
+	/**
+	 * Defines the natural order of Creations to be their latest time modified
+	 */
+	public int compareTo(Creation c) {
+		if (this._path.exists() && c._path.exists()) {
+			long time1 = this._path.lastModified();
+			long time2 = c._path.lastModified();
+			if (time1 < time2) {
+				return -1; // "this" was created before the other creation
+			} else if (time1 > time2) {
+				return 1;
+			} else {
+				return 0;
+			}
+		} else {
+			return 0; // call creations equal if both have not yet been generated
+		}
+	}
 
 }

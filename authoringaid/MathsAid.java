@@ -28,6 +28,9 @@ import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 @SuppressWarnings("serial")
 public class MathsAid extends JFrame implements CreationWorkerListener {
@@ -417,20 +420,30 @@ public class MathsAid extends JFrame implements CreationWorkerListener {
 
 	/**
 	 *  Initialize the list model on program startup, by scanning through
-	 *  existing creations and adding them to the list.
+	 *  existing creations and adding them to the list. Adds these in the order
+	 *  they were created (earliest first).
 	 */
 	private void initializeCreationsList() {
 		_existingCrtns = new DefaultListModel<Creation>();
+		List<Creation> cList = new ArrayList<Creation>();
 
 		File crtnsFolder = new File("creations");
 		if (crtnsFolder.exists()) {
 			String[] crtns = crtnsFolder.list();
 			if (crtns != null) {
 				for (String c : crtns) {
-					_existingCrtns.addElement(new Creation(c));
+					cList.add(new Creation(c));
+				}
+				
+				Collections.sort(cList);
+				
+				// add creations to listmodel once sorted.
+				for (Creation c : cList) {
+				_existingCrtns.addElement(c);
 				}
 			}
 		}
+		
 	}
 
 
