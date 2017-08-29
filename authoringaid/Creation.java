@@ -8,9 +8,10 @@ public class Creation implements Comparable<Creation> {
 	private File _video;
 	private File _audio;
 	private File _combined;
+	private File _preview;
 
 	enum Components {
-		ROOT, VIDEO, AUDIO, COMBINED
+		ROOT, VIDEO, AUDIO, COMBINED, PREVIEW
 	}
 
 
@@ -20,6 +21,7 @@ public class Creation implements Comparable<Creation> {
 		_video = new File("creations/" + name + "/" + name + ".mp4");
 		_audio = new File("creations/" + name + "/" + name + ".mp3");
 		_combined = new File("creations/" + name + "/" + name + "-combined.mp4");
+		_preview = new File("creations/" + name + "/" + name + ".jpg");
 	}
 
 	/**
@@ -38,6 +40,8 @@ public class Creation implements Comparable<Creation> {
 			return _audio;
 		case COMBINED:
 			return _combined;
+		case PREVIEW:
+			return _preview;
 		default:
 			// this will never be reached
 			throw new RuntimeException("Not a valid enum value");

@@ -4,6 +4,8 @@ import javax.swing.SwingUtilities;
 import authoringaid.Creation.Components;
 import uk.co.caprica.vlcj.component.EmbeddedMediaPlayerComponent;
 import uk.co.caprica.vlcj.discovery.NativeDiscovery;
+import uk.co.caprica.vlcj.player.MediaPlayer;
+import uk.co.caprica.vlcj.player.MediaPlayerEventAdapter;
 import uk.co.caprica.vlcj.player.embedded.EmbeddedMediaPlayer;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -102,7 +104,7 @@ public class MathsAid extends JFrame implements CreationWorkerListener {
 		/***************** GUI Layout Setup **************************/
 
 		_crtnToGenerate = null; // at this point we aren't generating any creation
-		
+
 		// set up menu panel
 		_pnlMenu = new JPanel();
 		_btnCreateMode = new JButton(CREATE_MODE_BUTTON);
@@ -136,8 +138,8 @@ public class MathsAid extends JFrame implements CreationWorkerListener {
 		// set up video view
 		_pnlVideoView = new JPanel(new BorderLayout());
 		_video = new EmbeddedMediaPlayerComponent();
-		_player = _video.getMediaPlayer();
 		_pnlVideoView.add(_video, BorderLayout.CENTER);
+		_player = _video.getMediaPlayer();
 
 		// set up create mode view
 		_lblCreateWelcome = new JLabel(LABEL_CREATE_WELCOME, SwingConstants.CENTER);
@@ -304,6 +306,19 @@ public class MathsAid extends JFrame implements CreationWorkerListener {
 				}
 			}
 		});
+
+		//		// stops playback when the video has completed
+		//		_player.addMediaPlayerEventListener(new MediaPlayerEventAdapter() {
+		//			@Override
+		//			public void finished(MediaPlayer player) {
+		//				SwingUtilities.invokeLater(new Runnable() {
+		//					public void run() {
+		//						_player.stop();
+		//					}
+		//				});
+		//			}
+		//		});
+
 	}
 
 	public static void main(String[] args) {
@@ -336,6 +351,7 @@ public class MathsAid extends JFrame implements CreationWorkerListener {
 		File pathToAudio = c.getFileName(Components.AUDIO);
 		File pathToVideo = c.getFileName(Components.VIDEO);
 		File pathToCombined = c.getFileName(Components.COMBINED);
+		File pathToPreview = c.getFileName(Components.PREVIEW);
 
 		while (true) {
 			// ask user if they want to listen to the recording
@@ -377,12 +393,20 @@ public class MathsAid extends JFrame implements CreationWorkerListener {
 					" -codec copy " + pathToCombined.getPath());
 			Process p = combine.start();
 			if (p.waitFor() == 0) {
-				_existingCrtns.addElement(c); // add creation to gui if merge was successful
-				_lblCreateModeStatus.setText("Creation \"" + c + "\" successfully created");
-				_btnCreate.setText(CREATE_BUTTON);
-				_btnCreate.setEnabled(true);
-				_txtCrtnName.setText("");
-				_crtnToGenerate = null; // reset this field because we are not currently generating a creation.
+				// generate preview of creation
+				ProcessBuilder preview = new ProcessBuilder("bash","-c",
+						"ffmpeg -i " + pathToCombined.getPath() + " -vframes 1 " + pathToPreview.getPath());
+				Process prev = preview.start();
+				if (prev.waitFor() == 0) {
+					_existingCrtns.addElement(c); // add creation to gui if merge and preview generation was successful
+					_lblCreateModeStatus.setText("Creation \"" + c + "\" successfully created");
+					_btnCreate.setText(CREATE_BUTTON);
+					_btnCreate.setEnabled(true);
+					_txtCrtnName.setText("");
+					_crtnToGenerate = null; // reset this field because we are not currently generating a creation.
+				} else {
+					cleanUp();
+				}
 			} else {
 				cleanUp();
 			}
@@ -434,16 +458,16 @@ public class MathsAid extends JFrame implements CreationWorkerListener {
 				for (String c : crtns) {
 					cList.add(new Creation(c));
 				}
-				
+
 				Collections.sort(cList);
-				
+
 				// add creations to listmodel once sorted.
 				for (Creation c : cList) {
-				_existingCrtns.addElement(c);
+					_existingCrtns.addElement(c);
 				}
 			}
 		}
-		
+
 	}
 
 
