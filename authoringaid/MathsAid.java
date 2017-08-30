@@ -33,6 +33,10 @@ import java.util.Collections;
 import java.util.List;
 
 @SuppressWarnings("serial")
+/**
+ * Class representing the main JFrame for the maths authoring aid. 
+ * Contains all gui components within it and defines how each component handles events.
+ */
 public class MathsAid extends JFrame implements CreationWorkerListener {
 
 	// constants to use for setting text of components in the gui
