@@ -19,7 +19,7 @@ public class CreationManager {
 		c.getFileName(Creation.Components.VIDEO).delete();
 		c.getFileName(Creation.Components.COMBINED).delete();
 		c.getFileName(Creation.Components.PREVIEW).delete();
-		c.getFileName(Creation.Components.ROOT).delete();
+		c.getFileName(Creation.Components.ROOT).delete(); // ensure root is deleted last, once all its contents are cleared
 	}
 	
 	/**

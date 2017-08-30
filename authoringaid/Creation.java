@@ -2,6 +2,9 @@ package authoringaid;
 
 import java.io.File;
 
+/**
+ * Abstraction for a creation. Encapsulates all information needed for any creation instance.
+ */
 public class Creation implements Comparable<Creation> {
 	private String _name;
 	private File _path;

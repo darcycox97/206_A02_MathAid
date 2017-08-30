@@ -1,5 +1,8 @@
 package authoringaid;
 
+/**
+ * Defines the methods that CreationWorker can invoke on its listeners.
+ */
 public interface CreationWorkerListener {
 
 	/**

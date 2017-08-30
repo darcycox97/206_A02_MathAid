@@ -11,8 +11,6 @@ import uk.co.caprica.vlcj.player.embedded.EmbeddedMediaPlayer;
 
 /**
  * Class that defines what the gui does when the user selects an item in the list.
- * @author Darcy Cox
- *
  */
 public class SelectionPreview implements ListSelectionListener {
 
