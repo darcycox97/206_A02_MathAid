@@ -18,7 +18,7 @@ import authoringaid.Creation.Components;
  *
  */
 public class CreationWorker extends SwingWorker<Integer, Void> {
-	
+
 	private final String ERROR_MSG;
 
 	private Creation _creation;
@@ -29,15 +29,15 @@ public class CreationWorker extends SwingWorker<Integer, Void> {
 		_listeners = new ArrayList<CreationWorkerListener>();
 		ERROR_MSG = errorMsg;
 	}
-	
+
 	public void addCreationWorkerListener(CreationWorkerListener l) {
 		_listeners.add(l);
 	}
 
 	protected Integer doInBackground() {
-		
+
 		publish(); // process method will disable recording button on EDT
-		
+
 		try {
 			File audioPath = _creation.getFileName(Components.AUDIO);
 			ProcessBuilder audio = new ProcessBuilder("bash","-c",
@@ -45,37 +45,33 @@ public class CreationWorker extends SwingWorker<Integer, Void> {
 			Process audioP = audio.start();
 			int exitVal = audioP.waitFor();
 			if (exitVal != 0) {
-				for (CreationWorkerListener l : _listeners) {
-					l.cleanUp(_creation, ERROR_MSG);
-				}
 				return 1;
 			}
 			return 0;
 
 		} catch (IOException | InterruptedException e) {
-			for (CreationWorkerListener l : _listeners) {
-				l.cleanUp(_creation, ERROR_MSG);
-			}
 			return 1; 
 		}
 	}
 
 	protected void done() {
-		try {
-			int exit = get();
-			if (exit == 0) {
-				for (CreationWorkerListener l : _listeners) {
-					l.audioComponentCreated();
+		if (!isCancelled()) {
+			try {
+				int exit = get();
+				if (exit == 0) {
+					for (CreationWorkerListener l : _listeners) {
+						l.audioComponentCreated();
+					}
+
+				} else {
+					for (CreationWorkerListener l : _listeners) {
+						l.cleanUp(ERROR_MSG);
+					}
 				}
-				
-			} else {
+			} catch (InterruptedException | ExecutionException e) {
 				for (CreationWorkerListener l : _listeners) {
-					l.cleanUp(_creation, ERROR_MSG);
+					l.cleanUp(ERROR_MSG);
 				}
-			}
-		} catch (InterruptedException | ExecutionException e) {
-			for (CreationWorkerListener l : _listeners) {
-				l.cleanUp(_creation, ERROR_MSG);
 			}
 		}
 	}
