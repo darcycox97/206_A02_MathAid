@@ -51,11 +51,11 @@ public class MathsAid extends JFrame implements CreationWorkerListener {
 	private static final String RECORD_PROMPT = "Press the record button to start recording";
 	private static final String STATUS_RECORDING = "Recording.......";
 	private static final String LABEL_EXISTING = "Existing Creations";
-	
+
 	// constants to use in error dialogs
 	private static final String ERROR_MSG = "An error occurred while generating this creation";
 	private static final String EXIT_EARLY_MSG = "Generation of this creation was not completed";
-	
+
 	// string identifiers for each view used by CardLayout.
 	private static final String VIDEO_VIEW_ID = "Video View";
 	private static final String CREATE_MODE_ID = "Create Mode";
@@ -205,12 +205,14 @@ public class MathsAid extends JFrame implements CreationWorkerListener {
 		_btnCreateMode.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				if (_btnCreateMode.getText().equals(CREATE_MODE_BUTTON)) {
+					// switch to create mode
 					((CardLayout)_pnlMain.getLayout()).show(_pnlMain, CREATE_MODE_ID);
 					// play/delete buttons should not be usable in this mode
 					_btnPlay.setEnabled(false);
 					_btnDelete.setEnabled(false);
 					_btnCreateMode.setText(QUIT_BUTTON);
 				} else {
+					// switch to video view
 					((CardLayout)_pnlMain.getLayout()).show(_pnlMain, VIDEO_VIEW_ID);
 					// play/delete buttons should be usable again
 					_btnPlay.setEnabled(true);
@@ -219,7 +221,7 @@ public class MathsAid extends JFrame implements CreationWorkerListener {
 
 					// remove partially generated creation files (if they exist), and reset GUI to its intial state
 					if (_crtnToGenerate != null) {
-						cleanUp(EXIT_EARLY_MSG);
+						cleanUp(_crtnToGenerate, EXIT_EARLY_MSG);
 					} else {
 						_txtCrtnName.setText("");
 						_lblCreateModeStatus.setText("");
@@ -234,7 +236,7 @@ public class MathsAid extends JFrame implements CreationWorkerListener {
 
 				if (_btnCreate.getText().equals(CREATE_BUTTON)) {
 					// in this case, the video component of the creation is generated
-					
+
 					String crtnName = _txtCrtnName.getText();
 
 					if (CreationManager.validName(crtnName)) { // check if name is valid
@@ -260,11 +262,11 @@ public class MathsAid extends JFrame implements CreationWorkerListener {
 							Process vidP = vid.start();
 							int exitVal =  vidP.waitFor();
 							if (exitVal != 0) {
-								cleanUp(ERROR_MSG);
+								cleanUp(_crtnToGenerate, ERROR_MSG);
 								return;
 							}
 						} catch (IOException | InterruptedException e1) {
-							cleanUp(ERROR_MSG);
+							cleanUp(_crtnToGenerate, ERROR_MSG);
 							return;
 						}
 						_btnCreate.setText(RECORD_BUTTON);
@@ -340,6 +342,7 @@ public class MathsAid extends JFrame implements CreationWorkerListener {
 	public void audioComponentCreated() {
 
 		if (_crtnToGenerate == null) {
+			cleanUp(_crtnToGenerate, EXIT_EARLY_MSG);
 			return; // do not proceed if user exited create mode
 		}
 
@@ -359,7 +362,6 @@ public class MathsAid extends JFrame implements CreationWorkerListener {
 
 			if (playBackSel == JOptionPane.YES_OPTION) {
 				if (_crtnToGenerate == null) {
-					cleanUp(EXIT_EARLY_MSG);
 					return;
 				} else {
 					_player.mute(false);
@@ -404,13 +406,13 @@ public class MathsAid extends JFrame implements CreationWorkerListener {
 					_txtCrtnName.setText("");
 					_crtnToGenerate = null; // reset this field because we are not currently generating a creation.
 				} else {
-					cleanUp(ERROR_MSG);
+					cleanUp(_crtnToGenerate, ERROR_MSG);
 				}
 			} else {
-				cleanUp(ERROR_MSG);
+				cleanUp(_crtnToGenerate, ERROR_MSG);
 			}
 		} catch (IOException | InterruptedException e) {
-			cleanUp(ERROR_MSG);
+			cleanUp(_crtnToGenerate, ERROR_MSG);
 		}
 
 	}
@@ -418,19 +420,19 @@ public class MathsAid extends JFrame implements CreationWorkerListener {
 	/**
 	 * See CreationWorkerListener
 	 */
-	public void cleanUp(String msg) {
-		
+	public void cleanUp(Creation crtn, String msg) {
+
 		_btnCreate.setText(CREATE_BUTTON);
 		_btnCreate.setEnabled(true);
 		_lblCreateModeStatus.setText("");
 		_txtCrtnName.setText("");
 
-		if (_crtnToGenerate != null) {
-			CreationManager.deleteCreation(_crtnToGenerate);
+		if (crtn != null) {
+			CreationManager.deleteCreation(crtn);
 		}
 
 		_crtnToGenerate = null;
-		
+
 		JOptionPane.showMessageDialog(this, msg, "Something went wrong", JOptionPane.ERROR_MESSAGE);
 	}
 

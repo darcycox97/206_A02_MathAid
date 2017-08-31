@@ -46,7 +46,7 @@ public class CreationWorker extends SwingWorker<Integer, Void> {
 			int exitVal = audioP.waitFor();
 			if (exitVal != 0) {
 				for (CreationWorkerListener l : _listeners) {
-					l.cleanUp(ERROR_MSG);
+					l.cleanUp(_creation, ERROR_MSG);
 				}
 				return 1;
 			}
@@ -54,7 +54,7 @@ public class CreationWorker extends SwingWorker<Integer, Void> {
 
 		} catch (IOException | InterruptedException e) {
 			for (CreationWorkerListener l : _listeners) {
-				l.cleanUp(ERROR_MSG);
+				l.cleanUp(_creation, ERROR_MSG);
 			}
 			return 1; 
 		}
@@ -70,12 +70,12 @@ public class CreationWorker extends SwingWorker<Integer, Void> {
 				
 			} else {
 				for (CreationWorkerListener l : _listeners) {
-					l.cleanUp(ERROR_MSG);
+					l.cleanUp(_creation, ERROR_MSG);
 				}
 			}
 		} catch (InterruptedException | ExecutionException e) {
 			for (CreationWorkerListener l : _listeners) {
-				l.cleanUp(ERROR_MSG);
+				l.cleanUp(_creation, ERROR_MSG);
 			}
 		}
 	}
