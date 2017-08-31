@@ -18,13 +18,16 @@ import authoringaid.Creation.Components;
  *
  */
 public class CreationWorker extends SwingWorker<Integer, Void> {
+	
+	private final String ERROR_MSG;
 
 	private Creation _creation;
 	private ArrayList<CreationWorkerListener> _listeners;
 
-	public CreationWorker(Creation creation) {
+	public CreationWorker(Creation creation, String errorMsg) {
 		_creation = creation;
 		_listeners = new ArrayList<CreationWorkerListener>();
+		ERROR_MSG = errorMsg;
 	}
 	
 	public void addCreationWorkerListener(CreationWorkerListener l) {
@@ -43,7 +46,7 @@ public class CreationWorker extends SwingWorker<Integer, Void> {
 			int exitVal = audioP.waitFor();
 			if (exitVal != 0) {
 				for (CreationWorkerListener l : _listeners) {
-					l.cleanUp();
+					l.cleanUp(ERROR_MSG);
 				}
 				return 1;
 			}
@@ -51,7 +54,7 @@ public class CreationWorker extends SwingWorker<Integer, Void> {
 
 		} catch (IOException | InterruptedException e) {
 			for (CreationWorkerListener l : _listeners) {
-				l.cleanUp();
+				l.cleanUp(ERROR_MSG);
 			}
 			return 1; 
 		}
@@ -67,12 +70,12 @@ public class CreationWorker extends SwingWorker<Integer, Void> {
 				
 			} else {
 				for (CreationWorkerListener l : _listeners) {
-					l.cleanUp();
+					l.cleanUp(ERROR_MSG);
 				}
 			}
 		} catch (InterruptedException | ExecutionException e) {
 			for (CreationWorkerListener l : _listeners) {
-				l.cleanUp();
+				l.cleanUp(ERROR_MSG);
 			}
 		}
 	}

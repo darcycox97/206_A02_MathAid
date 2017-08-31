@@ -18,6 +18,7 @@ public interface CreationWorkerListener {
 	/**
 	 * Method for the listener to specify how to clean up partially generated creations.
 	 * Should reset the gui to a state where it can safely continue after any error occurs.
+	 * @param msg The message to display on the dialog.
 	 */
-	public void cleanUp();
+	public void cleanUp(String msg);
 }

@@ -33,7 +33,8 @@ public class CreationManager {
 	
 	/**
 	 * Determines if the given name is appropriate for a creation.
-	 * Allows alphanumeric characters, hyphens and underscores.
+	 * Allows alphanumeric characters, hyphens and underscores. Also
+	 * plus and equal signs because the creations may reperesent equations.
 	 * @param name the proposed name for a creation
 	 */
 	public static boolean validName(String name) {
