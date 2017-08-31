@@ -322,7 +322,6 @@ public class MathsAid extends JFrame implements CreationWorkerListener {
 	}
 
 	public static void main(String[] args) {
-
 		NativeDiscovery nd = new NativeDiscovery();
 		nd.discover();
 		SwingUtilities.invokeLater(new Runnable() {
@@ -420,7 +419,7 @@ public class MathsAid extends JFrame implements CreationWorkerListener {
 	 * See CreationWorkerListener
 	 */
 	public void cleanUp(String msg) {
-		JOptionPane.showMessageDialog(this, msg, "Something went wrong", JOptionPane.ERROR_MESSAGE);
+		
 		_btnCreate.setText(CREATE_BUTTON);
 		_btnCreate.setEnabled(true);
 		_lblCreateModeStatus.setText("");
@@ -431,6 +430,8 @@ public class MathsAid extends JFrame implements CreationWorkerListener {
 		}
 
 		_crtnToGenerate = null;
+		
+		JOptionPane.showMessageDialog(this, msg, "Something went wrong", JOptionPane.ERROR_MESSAGE);
 	}
 
 	/**
