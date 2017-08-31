@@ -224,7 +224,7 @@ public class MathsAid extends JFrame implements CreationWorkerListener {
 					// remove partially generated creation files (if they exist), and reset GUI to its intial state
 					if (_crtnToGenerate != null) {
 						if (_worker != null) {
-							_worker.cancel(true); // cancel the CreationWorker to stop recording (if it is recording)
+							_worker.cancel(true); // tell the CreationWorker to stop recording (if it is recording)
 						}
 						cleanUp(EXIT_EARLY_MSG);
 					} else {
